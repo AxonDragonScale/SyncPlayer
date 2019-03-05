@@ -35,6 +35,7 @@ public class HostActivity extends AppCompatActivity {
                     @Override
                     public void onChoosePath(String path, File file) {
                         Toast.makeText(HostActivity.this, "Path: " + path, Toast.LENGTH_SHORT).show();
+                        // TODO: Save path as needed and send to player
                     }
                 });
 
