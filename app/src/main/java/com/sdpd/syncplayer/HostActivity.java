@@ -13,8 +13,11 @@ import java.io.File;
 
 public class HostActivity extends AppCompatActivity {
 
-    Button btnPickMedia;
-    Button btnOpenPlayer;
+    private Button btnPickMedia;
+    private Button btnOpenPlayer;
+
+    private String lastSelectedMediaPath;
+    private File lastSelectedMediaFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +26,8 @@ public class HostActivity extends AppCompatActivity {
 
         btnPickMedia = findViewById(R.id.btn_pickMedia);
         btnOpenPlayer = findViewById(R.id.btn_openPlayer);
+
+        lastSelectedMediaPath = "";
 
         // Choosing a media file
         btnPickMedia.setOnClickListener(new View.OnClickListener() {
@@ -34,6 +39,9 @@ public class HostActivity extends AppCompatActivity {
                 dialog.withChosenListener(new ChooserDialog.Result() {
                     @Override
                     public void onChoosePath(String path, File file) {
+                        lastSelectedMediaPath = path;
+                        lastSelectedMediaFile = file;
+
                         Toast.makeText(HostActivity.this, "Path: " + path, Toast.LENGTH_SHORT).show();
                         // TODO: Save path as needed and send to player
                     }
@@ -48,6 +56,8 @@ public class HostActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(HostActivity.this, PlayerActivity.class);
                 // TODO: Add whatever needs to be sent to PlayerActivity in the intent
+                intent.putExtra(GlobalManager.HOST_SELECT_PATH, lastSelectedMediaPath);
+                intent.putExtra(GlobalManager.HOST_SELECT_FILE, lastSelectedMediaFile);
 
                 startActivity(intent);
             }

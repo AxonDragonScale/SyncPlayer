@@ -12,17 +12,17 @@
         android:orientation="vertical">
 
         <com.google.android.exoplayer2.ui.PlayerView
-            android:id='@+id/xplayer'
+            android:id="@+id/xplayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="2">
 
         </com.google.android.exoplayer2.ui.PlayerView>
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="2">
 
             <android.support.v7.widget.RecyclerView
                 android:layout_width="match_parent"
