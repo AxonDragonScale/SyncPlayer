@@ -56,8 +56,8 @@ public class HostActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(HostActivity.this, PlayerActivity.class);
                 // TODO: Add whatever needs to be sent to PlayerActivity in the intent
-                intent.putExtra(GlobalManager.HOST_SELECT_PATH, lastSelectedMediaPath);
-                intent.putExtra(GlobalManager.HOST_SELECT_FILE, lastSelectedMediaFile);
+                intent.putExtra(getString(R.string.mediaSelectPathExtra), lastSelectedMediaPath);
+                intent.putExtra(getString(R.string.mediaSelectFileExtra), lastSelectedMediaFile);
 
                 startActivity(intent);
             }

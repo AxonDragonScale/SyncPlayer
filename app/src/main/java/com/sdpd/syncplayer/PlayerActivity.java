@@ -26,15 +26,15 @@ public class PlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        String path = getIntent().getStringExtra(GlobalManager.HOST_SELECT_PATH);
-        File file = (File)getIntent().getSerializableExtra(GlobalManager.HOST_SELECT_FILE);
+        String path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
+        File file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
         player = ExoPlayerFactory.newSimpleInstance(this);
         PlayerView pview = findViewById(R.id.xplayer);
         pview.setPlayer(player);
 
         // Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, "@string/app_name"));
+                Util.getUserAgent(this, getString(R.string.app_name)));
         // This is the MediaSource representing the media to be played.
         MediaSource videoSource = new ExtractorMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(Uri.fromFile(file));

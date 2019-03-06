@@ -22,5 +22,6 @@ public class ClientActivity extends AppCompatActivity {
 
         rvHostList.setHasFixedSize(true);
         rvHostList.setLayoutManager(layoutManager);
+        rvHostList.setAdapter(adapter);
     }
 }

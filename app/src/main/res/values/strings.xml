@@ -3,4 +3,6 @@
     <string name="sharedPrefsKey">SyncPlayerSharedPreferencesKey</string>
     <string name="isFirstRunSharedPrefsKey">isFirstSyncPlayerRun</string>
     <string name="nickSharedPrefsKey">nickSyncPlayerUser</string>
+    <string name="mediaSelectPathExtra">MEDIA_SELECT_EXTRA_PATH</string>
+    <string name="mediaSelectFileExtra">MEDIA_SELECT_EXTRA_FILE</string>
 </resources>
