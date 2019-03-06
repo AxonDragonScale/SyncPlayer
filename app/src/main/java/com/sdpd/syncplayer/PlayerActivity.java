@@ -86,9 +86,11 @@ public class PlayerActivity extends AppCompatActivity {
         int currentOrientation = getResources().getConfiguration().orientation;
         ViewGroup.LayoutParams params = pv_exoplayer.getLayoutParams();
         if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            rvClientList.setVisibility(View.GONE);
             params.height = params.MATCH_PARENT;
             pv_exoplayer.setLayoutParams(params);
         } else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            rvClientList.setVisibility(View.VISIBLE);
             params.height = 270 * getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT;
             pv_exoplayer.setLayoutParams(params);
         }
