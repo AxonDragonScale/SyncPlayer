@@ -4,6 +4,8 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +30,10 @@ public class PlayerActivity extends AppCompatActivity {
 
     SimpleExoPlayer player;
     PlayerView pv_exoplayer;
+
+    RecyclerView rvClientList;
+    RecyclerView.Adapter adapter;
+    RecyclerView.LayoutManager layoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +63,18 @@ public class PlayerActivity extends AppCompatActivity {
         // Prepare the player with the source.
         player.prepare(mediaSource);
 
-        if (savedInstanceState != null) {
-            player.setPlayWhenReady(savedInstanceState.getBoolean("PLAY_WHEN_READY"));
-            player.seekTo(savedInstanceState.getLong("SEEK_TIME", 0));
-        }
+//        if (savedInstanceState != null) {
+//            player.setPlayWhenReady(savedInstanceState.getBoolean("PLAY_WHEN_READY"));
+//            player.seekTo(savedInstanceState.getLong("SEEK_TIME", 0));
+//        }
+
+        rvClientList = findViewById(R.id.rv_clientList);
+        layoutManager = new LinearLayoutManager(this);
+        adapter = new ClientListAdapter();
+
+        rvClientList.setHasFixedSize(true);
+        rvClientList.setLayoutManager(layoutManager);
+        rvClientList.setAdapter(adapter);
     }
 
     @Override
@@ -84,8 +98,8 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putLong("SEEK_TIME", player.getCurrentPosition());
-        outState.putBoolean("PLAY_WHEN_READY", player.getPlayWhenReady());
+//        outState.putLong("SEEK_TIME", player.getCurrentPosition());
+//        outState.putBoolean("PLAY_WHEN_READY", player.getPlayWhenReady());
     }
 
     @Override
