@@ -10,6 +10,14 @@
         android:id="@+id/tv_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="30sp"/>
+        android:layout_marginTop="8dp"
+        android:textSize="30sp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A0A0A0"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_item" />
 
 </android.support.constraint.ConstraintLayout>
