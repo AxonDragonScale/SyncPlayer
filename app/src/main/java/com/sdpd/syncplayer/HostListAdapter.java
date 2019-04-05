@@ -1,6 +1,7 @@
 package com.sdpd.syncplayer;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.constraint.ConstraintLayout;
@@ -62,6 +63,9 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.HostVi
             Toast.makeText(view.getContext(), hostList.get(pos).hostAddress.toString(), Toast.LENGTH_LONG).show();
 
             // TODO: Connect to the host
+            Intent intent = new Intent(clientActivity, DownloadActivity.class);
+            intent.putExtra("hostKey", hostList.get(pos));
+            clientActivity.startActivity(intent);
         }
 
         public HostViewHolder(@NonNull View itemView) {
@@ -100,17 +104,5 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.HostVi
                 notifyDataSetChanged();
             }
         });
-    }
-
-    public class Host {
-        public String hostName;
-        public InetAddress hostAddress;
-        public int hostPort;
-
-        public Host(String hostName, InetAddress hostAddress, int hostPort) {
-            this.hostAddress = hostAddress;
-            this.hostName = hostName;
-            this.hostPort = hostPort;
-        }
     }
 }

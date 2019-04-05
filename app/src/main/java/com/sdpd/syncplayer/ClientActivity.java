@@ -13,7 +13,6 @@ public class ClientActivity extends AppCompatActivity {
     HostListAdapter adapter;
     RecyclerView.LayoutManager layoutManager;
 
-    FileReceiver fr;
     Button btRefresh;
 
     NsdClient nsdClient;
@@ -30,8 +29,6 @@ public class ClientActivity extends AppCompatActivity {
         rvHostList.setLayoutManager(layoutManager);
         rvHostList.setAdapter(adapter);
 
-        fr = new FileReceiver("192.168.137.127",3078);
-      
         nsdClient = new NsdClient(getApplicationContext(), adapter);
         nsdClient.discoverServices();
 
