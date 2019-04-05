@@ -8,7 +8,7 @@ import android.util.Log;
 public class NsdHost {
     String TAG = "NsdHostTAG";
 
-    String SERVICE_NAME = "SyncPlayerHostService";
+    String SERVICE_NAME = GlobalData.nick;
     String SERVICE_TYPE = "_http._tcp.";
 
     NsdManager manager;
@@ -17,6 +17,8 @@ public class NsdHost {
     int port = 7830;
 
     public NsdHost(Context context) {
+
+
         manager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         makeRegistrationListener();
     }

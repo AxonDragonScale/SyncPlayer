@@ -9,7 +9,7 @@ public class NsdClient {
 
     String TAG = "NsdClient";
 
-    String SERVICE_NAME = "SyncPlayerClientService";
+    String SERVICE_NAME = GlobalData.nick;
     String SERVICE_TYPE = "_http._tcp.";
 
     NsdManager manager;
