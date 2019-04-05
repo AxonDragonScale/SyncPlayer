@@ -11,6 +11,8 @@ public class ClientActivity extends AppCompatActivity {
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
 
+    FileReceiver fr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,5 +25,7 @@ public class ClientActivity extends AppCompatActivity {
         rvHostList.setHasFixedSize(true);
         rvHostList.setLayoutManager(layoutManager);
         rvHostList.setAdapter(adapter);
+
+        fr = new FileReceiver("192.168.137.127",3078);
     }
 }

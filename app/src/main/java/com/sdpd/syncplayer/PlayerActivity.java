@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -35,13 +36,17 @@ public class PlayerActivity extends AppCompatActivity {
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
 
+    private FileSender fs;
+    String path;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        String path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
+        path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
         File file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
+
         Log.e(TAG, "onCreate");
 
         // Remove action bar and status bar for proper fullscreen
@@ -75,6 +80,24 @@ public class PlayerActivity extends AppCompatActivity {
         rvClientList.setHasFixedSize(true);
         rvClientList.setLayoutManager(layoutManager);
         rvClientList.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        fs = new FileSender(path, 3078);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Toast.makeText(this, "STOP", Toast.LENGTH_SHORT).show();
+        Log.d("PLAYER_ACTIVITY", "STOP");
+
+        fs.harakiri();
+        fs = null;
     }
 
     @Override
