@@ -89,10 +89,16 @@ public class PlayerActivity extends AppCompatActivity {
             rvClientList.setVisibility(View.GONE);
             params.height = params.MATCH_PARENT;
             pv_exoplayer.setLayoutParams(params);
+
+            // remove status bar
+            // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
             rvClientList.setVisibility(View.VISIBLE);
             params.height = 270 * getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT;
             pv_exoplayer.setLayoutParams(params);
+
+            // show status bar
+            // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         }
     }
 

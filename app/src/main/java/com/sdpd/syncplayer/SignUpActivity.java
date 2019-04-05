@@ -28,6 +28,7 @@ public class SignUpActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String nick = tietNick.getText().toString();
+                GlobalData.nick = nick;
 
                 SharedPreferences sharedPrefs = getSharedPreferences(getString(R.string.sharedPrefsKey), MODE_PRIVATE);
                 SharedPreferences.Editor sharedPrefsEditor= sharedPrefs.edit();

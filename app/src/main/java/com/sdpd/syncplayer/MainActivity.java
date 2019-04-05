@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
             intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(intent);
         }
+        GlobalData.nick = sharedPrefs.getString("nickSyncPlayerUser", "NoNick");
 
         // Get Read/Write permissions
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
