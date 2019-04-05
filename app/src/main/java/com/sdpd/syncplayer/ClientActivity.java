@@ -4,14 +4,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.Button;
 
 public class ClientActivity extends AppCompatActivity {
 
     RecyclerView rvHostList;
-    RecyclerView.Adapter adapter;
+    HostListAdapter adapter;
     RecyclerView.LayoutManager layoutManager;
 
     FileReceiver fr;
+    Button btRefresh;
+
+    NsdClient nsdClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,12 +25,48 @@ public class ClientActivity extends AppCompatActivity {
 
         rvHostList = findViewById(R.id.rv_hostList);
         layoutManager = new LinearLayoutManager(this);
-        adapter = new HostListAdapter();
+        adapter = new HostListAdapter(this);
 
-        rvHostList.setHasFixedSize(true);
         rvHostList.setLayoutManager(layoutManager);
         rvHostList.setAdapter(adapter);
 
         fr = new FileReceiver("192.168.137.127",3078);
+      
+        nsdClient = new NsdClient(getApplicationContext(), adapter);
+        nsdClient.discoverServices();
+
+        btRefresh = findViewById(R.id.btn_refresh);
+        btRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nsdClient.stopDiscovery();
+                adapter.clear();
+
+                nsdClient = new NsdClient(getApplicationContext(), adapter);
+                nsdClient.discoverServices();
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        nsdClient.stopDiscovery();
     }
 }
