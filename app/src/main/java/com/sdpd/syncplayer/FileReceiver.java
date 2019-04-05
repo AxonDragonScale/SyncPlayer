@@ -24,7 +24,10 @@ public class FileReceiver implements Runnable {
     InetAddress IP;
     int port;
 
-    FileReceiver(String IP, int port) {
+    DownloadActivity downloadActivity;
+
+    public FileReceiver(String IP, int port, DownloadActivity downloadActivity) {
+        this.downloadActivity = downloadActivity;
         try {
             this.IP = InetAddress.getByName(IP);
             this.port = port;
@@ -35,7 +38,7 @@ public class FileReceiver implements Runnable {
         }
     }
 
-    FileReceiver(InetAddress IP, int port) {
+    public FileReceiver(InetAddress IP, int port) {
         this.IP = IP;
         this.port = port;
         t = new Thread(this);
