@@ -13,21 +13,50 @@ import java.io.File;
 
 public class HostActivity extends AppCompatActivity {
 
-    private Button btnPickMedia;
-    private Button btnOpenPlayer;
+    Button btnPickMedia;
+    Button btnOpenPlayer;
 
-    private String lastSelectedMediaPath;
-    private File lastSelectedMediaFile;
+    String lastSelectedMediaPath;
+    File lastSelectedMediaFile;
+
+    NsdHost nsdHost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
 
+        initButtons();
+
+        nsdHost = new NsdHost(getApplicationContext());    // why not accepting context parameter
+        nsdHost.registerService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        nsdHost.unRegisterService();
+    }
+
+    void initButtons() {
         btnPickMedia = findViewById(R.id.btn_pickMedia);
         btnOpenPlayer = findViewById(R.id.btn_openPlayer);
-
-        lastSelectedMediaPath = "";
 
         // Choosing a media file
         btnPickMedia.setOnClickListener(new View.OnClickListener() {
@@ -43,7 +72,6 @@ public class HostActivity extends AppCompatActivity {
                         lastSelectedMediaFile = file;
 
                         Toast.makeText(HostActivity.this, "Path: " + path, Toast.LENGTH_SHORT).show();
-                        // TODO: Save path as needed and send to player
                     }
                 });
 
@@ -55,14 +83,13 @@ public class HostActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(HostActivity.this, PlayerActivity.class);
-                // TODO: Add whatever needs to be sent to PlayerActivity in the intent
                 intent.putExtra(getString(R.string.mediaSelectPathExtra), lastSelectedMediaPath);
                 intent.putExtra(getString(R.string.mediaSelectFileExtra), lastSelectedMediaFile);
 
                 startActivity(intent);
             }
         });
-
-
     }
 }
+
+
