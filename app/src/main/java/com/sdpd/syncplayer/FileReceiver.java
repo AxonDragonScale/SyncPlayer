@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
 
 public class FileReceiver implements Runnable {
     Thread t;
@@ -38,7 +39,8 @@ public class FileReceiver implements Runnable {
         }
     }
 
-    public FileReceiver(InetAddress IP, int port) {
+    public FileReceiver(InetAddress IP, int port, DownloadActivity downloadActivity) {
+        this.downloadActivity = downloadActivity;
         this.IP = IP;
         this.port = port;
         t = new Thread(this);
@@ -48,15 +50,20 @@ public class FileReceiver implements Runnable {
     @Override
     public void run() {
         String fle = "xxx";
+        String filepath = "";
+        File file = null;
+        long filelen = 0;
         try {
             sock = new Socket(IP, port);
             dis = new DataInputStream(sock.getInputStream());
             dos = new DataOutputStream(sock.getOutputStream());
             String filename = dis.readUTF();
+            filelen = dis.readLong();
             fle = filename.substring(filename.lastIndexOf("/")+1);
-            File f = new File(Environment.getExternalStorageDirectory() + File.separator + fle);
-            f.createNewFile();
-            fos = new FileOutputStream(f);
+            filepath = Environment.getExternalStorageDirectory() + File.separator + fle;
+            file = new File(filepath);
+            file.createNewFile();
+            fos = new FileOutputStream(file);
             bis = new BufferedInputStream(sock.getInputStream());
         } catch (Exception e) {
             Log.e("FILE_RECV", e.toString());
@@ -66,8 +73,11 @@ public class FileReceiver implements Runnable {
         int flen = 2048;
         byte[] arr = new byte[flen];
         try {
+            long total_read = 0;
             while ((read = bis.read(arr, 0, flen)) != -1) {
+                total_read += read;
                 fos.write(arr, 0, read);
+                downloadActivity.setProgess((int)(total_read*100 / filelen), ((total_read/1024)/1024), ((filelen/1024)/1024));
             }
         } catch (Exception e) {
             Log.e("FILE_RECV", e.toString());
@@ -79,5 +89,9 @@ public class FileReceiver implements Runnable {
         }
 
         Log.d("FILE_RECV", "Recieved " + fle);
+
+        if (!fle.equals("xxx")) {
+            downloadActivity.onFinishDownload(filepath, file);
+        }
     }
 }

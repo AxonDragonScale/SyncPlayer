@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -24,13 +25,14 @@ class FileSenderHandler implements Runnable {
     FileInputStream fis;
     String filename;
 
+    final int flen = 2048;
+
     FileSenderHandler(Socket s, String filen) {
         sock = s;
         try {
             dis = new DataInputStream(sock.getInputStream());
             dos = new DataOutputStream(sock.getOutputStream());
             filename = filen;
-            dos.writeUTF(filen);
         } catch (IOException e) {
             Log.e("FILE_SENDER_HANDLER", e.getMessage() + "\n" + e.getStackTrace());
         }
@@ -39,10 +41,12 @@ class FileSenderHandler implements Runnable {
     @Override
     public void run() {
         try {
-            fis = new FileInputStream(filename);
+            dos.writeUTF(filename);
+            File file = new File(filename);
+            dos.writeLong(file.length());
+            fis = new FileInputStream(file);
 
             int read;
-            int flen = 2048;
             byte[] arr = new byte[flen];
             int i = 0;
             while ((read = fis.read(arr, 0, flen)) != -1) {
