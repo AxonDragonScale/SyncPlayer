@@ -9,6 +9,8 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.File;
+
 public class DownloadActivity extends AppCompatActivity {
 
     TextView tvJoiningHost;
@@ -62,12 +64,19 @@ public class DownloadActivity extends AppCompatActivity {
                 etPassword.setVisibility(View.GONE);
                 btnJoin.setVisibility(View.GONE);
 
-                fileReceiver = new FileReceiver(host.hostAddress,3078);
+                fileReceiver = new FileReceiver(host.hostAddress,3078,DownloadActivity.this);
             }
         });
     }
 
-    public void setProgess(int progessInPercent, int downloaded, int totalSize) {
+    public void onFinishDownload(String path, File file) {
+        Intent intent = new Intent(DownloadActivity.this, PlayerActivity.class);
+        intent.putExtra(getString(R.string.mediaSelectPathExtra), path);
+        intent.putExtra(getString(R.string.mediaSelectFileExtra), file);
+        startActivity(intent);
+    }
+
+    public void setProgess(int progessInPercent, long downloaded, long totalSize) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

@@ -86,7 +86,9 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        fs = new FileSender(path, 3078);
+        if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            fs = new FileSender(path, 3078);
+        }
     }
 
     @Override
@@ -96,8 +98,10 @@ public class PlayerActivity extends AppCompatActivity {
         Toast.makeText(this, "STOP", Toast.LENGTH_SHORT).show();
         Log.d("PLAYER_ACTIVITY", "STOP");
 
-        fs.harakiri();
-        fs = null;
+        if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            fs.harakiri();
+            fs = null;
+        }
     }
 
     @Override

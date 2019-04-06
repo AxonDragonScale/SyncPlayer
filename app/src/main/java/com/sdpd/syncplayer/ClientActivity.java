@@ -22,6 +22,8 @@ public class ClientActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
 
+        GlobalData.deviceRole = GlobalData.DeviceRole.CLIENT;
+
         rvHostList = findViewById(R.id.rv_hostList);
         layoutManager = new LinearLayoutManager(this);
         adapter = new HostListAdapter(this);

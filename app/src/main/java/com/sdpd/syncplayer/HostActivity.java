@@ -27,6 +27,8 @@ public class HostActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
 
+        GlobalData.deviceRole = GlobalData.DeviceRole.HOST;
+
         initButtons();
 
         nsdHost = new NsdHost(getApplicationContext());    // why not accepting context parameter
