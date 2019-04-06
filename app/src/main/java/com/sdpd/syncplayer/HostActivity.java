@@ -14,6 +14,7 @@ import java.io.File;
 public class HostActivity extends AppCompatActivity {
 
     Button btnPickMedia;
+
     Button btnOpenPlayer;
 
     String lastSelectedMediaPath;
