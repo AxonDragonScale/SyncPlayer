@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.Serializable;
 
 public class DownloadActivity extends AppCompatActivity {
 
@@ -81,16 +82,15 @@ public class DownloadActivity extends AppCompatActivity {
         Intent intent = new Intent(DownloadActivity.this, PlayerActivity.class);
         intent.putExtra(getString(R.string.mediaSelectPathExtra), path);
         intent.putExtra(getString(R.string.mediaSelectFileExtra), file);
+        intent.putExtra("HOST", (Serializable)host.hostAddress);
         startActivity(intent);
     }
 
+
     public void setProgress(int progessInPercent, long downloaded, long totalSize) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                pbDownloadProgress.setProgress(progessInPercent);
-                tvDownloadProgress.setText("" + downloaded + "MB/" + totalSize + "MB");
-            }
+        runOnUiThread(() -> {
+            pbDownloadProgress.setProgress(progessInPercent);
+            tvDownloadProgress.setText("" + downloaded + "MB/" + totalSize + "MB");
         });
     }
 }
