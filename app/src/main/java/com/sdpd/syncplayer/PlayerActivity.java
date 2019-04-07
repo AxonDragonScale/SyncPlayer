@@ -14,6 +14,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -23,20 +24,24 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
+import java.net.InetAddress;
 
 public class PlayerActivity extends AppCompatActivity {
 
     String TAG = "PlayerActivity";
 
-    SimpleExoPlayer player;
-    PlayerView pvExoplayer;
+    private SimpleExoPlayer player;
+    private PlayerView pvExoplayer;
 
-    RecyclerView rvClientList;
-    RecyclerView.Adapter adapter;
-    RecyclerView.LayoutManager layoutManager;
+    private RecyclerView rvClientList;
+    private RecyclerView.Adapter adapter;
+    private RecyclerView.LayoutManager layoutManager;
 
     private FileSender fs;
-    String path;
+    private String path;
+
+    private SyncServer syncServer;
+    private SyncClient syncClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +72,7 @@ public class PlayerActivity extends AppCompatActivity {
         // Prepare the player with the source.
         player.prepare(mediaSource);
 
-//        if (savedInstanceState != null) {
-//            player.setPlayWhenReady(savedInstanceState.getBoolean("PLAY_WHEN_READY"));
-//            player.seekTo(savedInstanceState.getLong("SEEK_TIME", 0));
-//        }
-
+        // Setup the entire recycler view for client list
         rvClientList = findViewById(R.id.rv_clientList);
         layoutManager = new LinearLayoutManager(this);
         adapter = new ClientListAdapter();
@@ -87,6 +88,19 @@ public class PlayerActivity extends AppCompatActivity {
 
         if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
             fs = new FileSender(path, 3078);
+        }
+        if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            syncServer = new SyncServer(this);
+            player.addListener(new Player.EventListener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    Toast.makeText(PlayerActivity.this, "PLAY: " + playWhenReady, Toast.LENGTH_SHORT).show();
+                    syncServer.setPlayState(playWhenReady);
+                }
+            });
+        } else if (GlobalData.deviceRole == GlobalData.DeviceRole.CLIENT) {
+            InetAddress addr = (InetAddress)getIntent().getSerializableExtra("HOST");
+            syncClient = new SyncClient(this, addr);
         }
     }
 
@@ -111,6 +125,8 @@ public class PlayerActivity extends AppCompatActivity {
             fs.harakiri();
             fs = null;
         }
+        if (syncClient != null) syncClient.close();
+        if (syncServer != null) syncServer.close();
     }
 
     @Override
@@ -150,5 +166,17 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         player.release();
+    }
+
+    public long getPlaybackPosition() {
+        return player.getCurrentPosition();
+    }
+
+    public void seekTo(long l) {
+        player.seekTo(l);
+    }
+
+    public void setPlay(boolean b) {
+        player.setPlayWhenReady(b);
     }
 }
