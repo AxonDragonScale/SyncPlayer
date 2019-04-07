@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -30,7 +29,7 @@ public class PlayerActivity extends AppCompatActivity {
     String TAG = "PlayerActivity";
 
     SimpleExoPlayer player;
-    PlayerView pv_exoplayer;
+    PlayerView pvExoplayer;
 
     RecyclerView rvClientList;
     RecyclerView.Adapter adapter;
@@ -54,8 +53,8 @@ public class PlayerActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         player = ExoPlayerFactory.newSimpleInstance(this);
-        pv_exoplayer = findViewById(R.id.pv_exoplayer);
-        pv_exoplayer.setPlayer(player);
+        pvExoplayer = findViewById(R.id.pv_exoplayer);
+        pvExoplayer.setPlayer(player);
 
         // Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
@@ -92,6 +91,16 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
 
@@ -111,18 +120,18 @@ public class PlayerActivity extends AppCompatActivity {
         Log.e(TAG, "Config Changed");
 
         int currentOrientation = getResources().getConfiguration().orientation;
-        ViewGroup.LayoutParams params = pv_exoplayer.getLayoutParams();
+        ViewGroup.LayoutParams params = pvExoplayer.getLayoutParams();
         if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
             rvClientList.setVisibility(View.GONE);
             params.height = params.MATCH_PARENT;
-            pv_exoplayer.setLayoutParams(params);
+            pvExoplayer.setLayoutParams(params);
 
             // remove status bar
             // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
             rvClientList.setVisibility(View.VISIBLE);
             params.height = 270 * getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT;
-            pv_exoplayer.setLayoutParams(params);
+            pvExoplayer.setLayoutParams(params);
 
             // show status bar
             // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);

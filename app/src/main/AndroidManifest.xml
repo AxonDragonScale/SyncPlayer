@@ -20,7 +20,8 @@
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"/>
         <activity android:name=".HostActivity" />
         <activity android:name=".ClientActivity" />
-        <activity android:name=".DownloadActivity"/>
+        <activity android:name=".DownloadActivity"
+            android:noHistory="true"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -20,6 +21,8 @@ public class DownloadActivity extends AppCompatActivity {
     TextView tvDownloadingMediaText;
     ProgressBar pbDownloadProgress;
     TextView tvDownloadProgress;
+
+    String password;
 
     FileReceiver fileReceiver;
     Host host;
@@ -48,23 +51,28 @@ public class DownloadActivity extends AppCompatActivity {
 
         tvJoiningHost.setText("Joining " + host.hostName);
 
-        btnJoin.setOnClickListener(new View.OnClickListener() {
+        btnJoin.setOnClickListener(v -> {
+            password = etPassword.getText().toString();
+
+            tvDownloadingMediaText.setVisibility(View.VISIBLE);
+            pbDownloadProgress.setVisibility(View.VISIBLE);
+            tvDownloadProgress.setVisibility(View.VISIBLE);
+
+            tvEnterPasswordText.setVisibility(View.GONE);
+            etPassword.setVisibility(View.GONE);
+            btnJoin.setVisibility(View.GONE);
+
+            fileReceiver = new FileReceiver(host.hostAddress,3078,DownloadActivity.this);
+        });
+    }
+
+    public void onFailure(String msg) {
+        runOnUiThread(new Runnable() {
             @Override
-            public void onClick(View v) {
-                String password = etPassword.getText().toString();
-
-                // TODO: Check if password is correct (if not correct, go to ClientActivity)
-
-                // if correct
-                tvDownloadingMediaText.setVisibility(View.VISIBLE);
-                pbDownloadProgress.setVisibility(View.VISIBLE);
-                tvDownloadProgress.setVisibility(View.VISIBLE);
-
-                tvEnterPasswordText.setVisibility(View.GONE);
-                etPassword.setVisibility(View.GONE);
-                btnJoin.setVisibility(View.GONE);
-
-                fileReceiver = new FileReceiver(host.hostAddress,3078,DownloadActivity.this);
+            public void run() {
+                Toast.makeText(DownloadActivity.this, msg, Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(DownloadActivity.this, ClientActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -76,7 +84,7 @@ public class DownloadActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void setProgess(int progessInPercent, long downloaded, long totalSize) {
+    public void setProgress(int progessInPercent, long downloaded, long totalSize) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
