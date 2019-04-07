@@ -1,5 +1,6 @@
 package com.sdpd.syncplayer;
 
+import android.app.AuthenticationRequiredException;
 import android.net.Uri;
 import android.util.Log;
 
@@ -27,6 +28,8 @@ class FileSenderHandler implements Runnable {
 
     final int flen = 2048;
 
+    boolean auth;
+
     FileSenderHandler(Socket s, String filen) {
         sock = s;
         try {
@@ -41,25 +44,27 @@ class FileSenderHandler implements Runnable {
     @Override
     public void run() {
         try {
-            dos.writeUTF(filename);
-            File file = new File(filename);
-            dos.writeLong(file.length());
-            fis = new FileInputStream(file);
+            dos.writeUTF(GlobalData.password);
+            if(dis.readBoolean()) {
+                dos.writeUTF(filename);
+                File file = new File(filename);
+                dos.writeLong(file.length());
+                fis = new FileInputStream(file);
 
-            int read;
-            byte[] arr = new byte[flen];
-            int i = 0;
-            while ((read = fis.read(arr, 0, flen)) != -1) {
-                i++;
-                Log.d("FILE_SENDER_PROG", Integer.toString(i));
-                dos.write(arr, 0, read);
+                int read;
+                byte[] arr = new byte[flen];
+                int i = 0;
+                while ((read = fis.read(arr, 0, flen)) != -1) {
+                    i++;
+                    Log.d("FILE_SENDER_PROG", Integer.toString(i));
+                    dos.write(arr, 0, read);
+                    Thread.sleep(0,1);
+                }
             }
-            Thread.sleep(1);
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e("FILE_SENDER_HANDLER", e.toString());
-        } catch (InterruptedException e) {
-            Log.e("FILE_SENDER_HANDLER", "Killed");
         }
+
         try {
             dis.close();
         } catch (IOException e) {
@@ -71,7 +76,9 @@ class FileSenderHandler implements Runnable {
             Log.e("FILE_SENDER_HANDLER", e.toString());
         }
         try {
-            fis.close();
+            if(fis != null) {
+                fis.close();
+            }
         } catch (IOException e) {
             Log.e("FILE_SENDER_HANDLER", e.toString());
         }
@@ -124,6 +131,8 @@ public class FileSender implements Runnable {
                 Log.e("FILE_SENDER", e.toString() + "1");
             }
         }
+
+        // if not running close the socket
         try {
             sock.close();
         } catch (IOException e) {
