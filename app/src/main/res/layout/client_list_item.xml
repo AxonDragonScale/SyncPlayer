@@ -42,7 +42,7 @@
         android:background="@drawable/btn_rounded"
         android:gravity="center"
         android:padding="10dp"
-        android:text="CONNECT"
+        android:text="Kick"
         android:textColor="@color/white"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"

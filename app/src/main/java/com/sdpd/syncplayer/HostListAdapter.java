@@ -62,7 +62,6 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.HostVi
             Log.i("HOST_VIEW_CREATE", "BUTTON_PRESS");
             Toast.makeText(view.getContext(), hostList.get(pos).hostAddress.toString(), Toast.LENGTH_LONG).show();
 
-            // TODO: Connect to the host
             Intent intent = new Intent(clientActivity, DownloadActivity.class);
             intent.putExtra("hostKey", hostList.get(pos));
             clientActivity.startActivity(intent);
@@ -70,8 +69,8 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.HostVi
 
         public HostViewHolder(@NonNull View itemView) {
             super(itemView);
-            row = (ConstraintLayout) itemView.findViewById(R.id.host_list_row);
-            textView = (TextView) itemView.findViewById(R.id.tv_item);
+            row = itemView.findViewById(R.id.host_list_row);
+            textView = itemView.findViewById(R.id.tv_item);
         }
     }
 
@@ -98,11 +97,6 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.HostVi
     }
 
     public void updateRecyclerView() {
-        clientActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notifyDataSetChanged();
-            }
-        });
+        clientActivity.runOnUiThread(() -> notifyDataSetChanged());
     }
 }

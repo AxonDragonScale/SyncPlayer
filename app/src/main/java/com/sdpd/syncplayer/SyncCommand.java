@@ -5,5 +5,6 @@ enum SyncCommand {
     PLAY,
     PAUSE,
     ECHO_RTT,
-    ECHO_SEEK
+    ECHO_SEEK,
+    KICK
 }

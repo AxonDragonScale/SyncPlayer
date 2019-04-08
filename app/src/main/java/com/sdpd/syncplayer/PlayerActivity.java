@@ -34,13 +34,16 @@ public class PlayerActivity extends AppCompatActivity {
     private PlayerView pvExoplayer;
 
     private RecyclerView rvClientList;
-    private RecyclerView.Adapter adapter;
+    ClientListAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
+
+    private NsdHost nsdHost;
 
     private FileSender fs;
     private String path;
+    private File file;
 
-    private SyncServer syncServer;
+    SyncServer syncServer;
     private SyncClient syncClient;
 
     @Override
@@ -48,48 +51,20 @@ public class PlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
-        File file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
-
         Log.e(TAG, "onCreate");
 
-        // Remove action bar and status bar for proper fullscreen
-        getSupportActionBar().hide();
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
+        file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
 
-        player = ExoPlayerFactory.newSimpleInstance(this);
-        pvExoplayer = findViewById(R.id.pv_exoplayer);
-        pvExoplayer.setPlayer(player);
-
-        // Produces DataSource instances through which media data is loaded.
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, getString(R.string.app_name)));
-
-        // This is the MediaSource representing the media to be played.
-        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(Uri.fromFile(file));
-
-        // Prepare the player with the source.
-        player.prepare(mediaSource);
-
-        // Setup the entire recycler view for client list
-        rvClientList = findViewById(R.id.rv_clientList);
-        layoutManager = new LinearLayoutManager(this);
-        adapter = new ClientListAdapter();
-
-        rvClientList.setHasFixedSize(true);
-        rvClientList.setLayoutManager(layoutManager);
-        rvClientList.setAdapter(adapter);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
+        initPlayer();
+        initRvClientList();
 
         if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            nsdHost = new NsdHost(getApplicationContext());    // why not accepting context parameter
+            nsdHost.registerService();
+
             fs = new FileSender(path, 3078);
-        }
-        if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+
             syncServer = new SyncServer(this);
             player.addListener(new Player.EventListener() {
                 @Override
@@ -99,9 +74,14 @@ public class PlayerActivity extends AppCompatActivity {
                 }
             });
         } else if (GlobalData.deviceRole == GlobalData.DeviceRole.CLIENT) {
-            InetAddress addr = (InetAddress)getIntent().getSerializableExtra("HOST");
-            syncClient = new SyncClient(this, addr);
+            InetAddress address = (InetAddress) getIntent().getSerializableExtra("HOST");
+            syncClient = new SyncClient(this, address);
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -117,16 +97,25 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+    }
 
-        Toast.makeText(this, "STOP", Toast.LENGTH_SHORT).show();
-        Log.d("PLAYER_ACTIVITY", "STOP");
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        Toast.makeText(this, "Destroy", Toast.LENGTH_SHORT).show();
+        Log.d("PLAYER_ACTIVITY", "Destroy");
 
         if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
             fs.harakiri();
             fs = null;
         }
+
         if (syncClient != null) syncClient.close();
         if (syncServer != null) syncServer.close();
+
+        player.release();
+        nsdHost.unRegisterService();
     }
 
     @Override
@@ -162,10 +151,42 @@ public class PlayerActivity extends AppCompatActivity {
 //        outState.putBoolean("PLAY_WHEN_READY", player.getPlayWhenReady());
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        player.release();
+    public void initPlayer() {
+        // Remove action bar and status bar for proper fullscreen
+        getSupportActionBar().hide();
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        player = ExoPlayerFactory.newSimpleInstance(this);
+        pvExoplayer = findViewById(R.id.pv_exoplayer);
+        pvExoplayer.setPlayer(player);
+
+        if(GlobalData.deviceRole == GlobalData.DeviceRole.CLIENT) {
+            pvExoplayer.setUseController(false);
+        }
+
+        // Produces DataSource instances through which media data is loaded.
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
+                Util.getUserAgent(this, getString(R.string.app_name)));
+
+        // This is the MediaSource representing the media to be played.
+        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(Uri.fromFile(file));
+
+        // Prepare the player with the source.
+        player.prepare(mediaSource);
+    }
+
+    public void initRvClientList() {
+        if(GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            // Setup the entire recycler view for client list
+            rvClientList = findViewById(R.id.rv_clientList);
+            layoutManager = new LinearLayoutManager(this);
+            adapter = new ClientListAdapter(this);
+
+            rvClientList.setHasFixedSize(true);
+            rvClientList.setLayoutManager(layoutManager);
+            rvClientList.setAdapter(adapter);
+        }
     }
 
     public long getPlaybackPosition() {

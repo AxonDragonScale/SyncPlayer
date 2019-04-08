@@ -1,5 +1,6 @@
 package com.sdpd.syncplayer;
 
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
@@ -50,6 +51,9 @@ public class SyncClient implements Runnable {
         try {
             dis = new DataInputStream(socket.getInputStream());
             dos = new DataOutputStream(socket.getOutputStream());
+
+            // Send nick to the server
+            dos.writeUTF(GlobalData.nick);
         } catch (IOException e) {
             Log.e("SYNC_CLIENT", e.toString());
         }
@@ -97,6 +101,11 @@ public class SyncClient implements Runnable {
                     dos.writeInt(command);
                     dos.writeLong(val);
                     sem.release();
+                } else if(command == SyncCommand.KICK.ordinal()) {
+                    running.set(false);
+                    Intent intent = new Intent(playerActivity, MainActivity.class);
+                    intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    playerActivity.startActivity(intent);
                 }
             } catch (IOException e) {
                 running.set(false);

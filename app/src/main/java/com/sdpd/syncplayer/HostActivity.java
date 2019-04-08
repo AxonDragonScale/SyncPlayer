@@ -23,8 +23,6 @@ public class HostActivity extends AppCompatActivity {
     String lastSelectedMediaPath;
     File lastSelectedMediaFile;
 
-    NsdHost nsdHost;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,9 +31,6 @@ public class HostActivity extends AppCompatActivity {
         GlobalData.deviceRole = GlobalData.DeviceRole.HOST;
 
         initViews();
-
-        nsdHost = new NsdHost(getApplicationContext());    // why not accepting context parameter
-        nsdHost.registerService();
     }
 
     @Override
@@ -56,8 +51,6 @@ public class HostActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        nsdHost.unRegisterService();
     }
 
     void initViews() {
