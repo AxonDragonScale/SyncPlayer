@@ -24,9 +24,12 @@ public class SyncServer {
     class SyncSocket {
 
         Socket socket;
+        String clientNick;
+
         DataOutputStream dos;
         DataInputStream dis;
         Lock lock;
+
         long echoDelay;
         long totalDelay;
 
@@ -36,6 +39,11 @@ public class SyncServer {
             try {
                 dos = new DataOutputStream(socket.getOutputStream());
                 dis = new DataInputStream(socket.getInputStream());
+
+                // get the nick
+                clientNick = dis.readUTF();
+                playerActivity.adapter.addClient(clientNick);
+
                 dos.writeInt(SyncCommand.ECHO_RTT.ordinal());
                 dos.writeLong(currentTimeMillis());
                 if (dis.readInt() == SyncCommand.ECHO_RTT.ordinal()) {
@@ -46,6 +54,7 @@ public class SyncServer {
                 }
             } catch (IOException e) {
                 Log.e("SYNC_SOCK", e.toString());
+                close();
             }
         }
 
@@ -67,7 +76,7 @@ public class SyncServer {
                 }
                 lock.unlock();
             } else {
-                socket = null;
+                close();
             }
             Log.i("SYNC_SOCK_DELAYS", "" + echoDelay + " " + totalDelay);
         }
@@ -84,7 +93,7 @@ public class SyncServer {
                 }
                 lock.unlock();
             } else {
-                socket = null;
+                close();
             }
         }
 
@@ -100,7 +109,7 @@ public class SyncServer {
                 }
                 lock.unlock();
             } else {
-                socket = null;
+                close();
             }
         }
 
@@ -116,7 +125,23 @@ public class SyncServer {
                 }
                 lock.unlock();
             } else {
-                socket = null;
+                close();
+            }
+        }
+
+        public void kick() {
+            if(socket != null && dos != null) {
+                exec.execute(() -> {
+                    lock.lock();
+                    try {
+                        dos.writeInt(SyncCommand.KICK.ordinal());
+                        dos.writeLong(0);
+                        close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    lock.unlock();
+                });
             }
         }
 
@@ -126,6 +151,8 @@ public class SyncServer {
 
         public void close() {
             try {
+                connectedSockets.remove(this);
+                playerActivity.adapter.removeClient(clientNick);
                 socket.close();
             } catch (IOException e) {
                 Log.e("SYNC_SOCK", e.toString());
@@ -141,19 +168,21 @@ public class SyncServer {
         public Listener() {
             running = new AtomicBoolean(true);
         }
+
         @Override
         public void run() {
             while(running.get()) {
                 try {
                     Socket s = serv.accept();
-                    SyncSocket sync = new SyncSocket(s);
-                    sync.calcDelay(playerActivity);
+                    SyncSocket syncSocket = new SyncSocket(s);
+
+                    syncSocket.calcDelay(playerActivity);
                     if (playState) {
-                        sync.play(playerActivity.getPlaybackPosition());
+                        syncSocket.play(playerActivity.getPlaybackPosition());
                     } else {
-                        sync.play(playerActivity.getPlaybackPosition());
+                        syncSocket.play(playerActivity.getPlaybackPosition());
                     }
-                    connectedSockets.add(sync);
+                    connectedSockets.add(syncSocket);
                 } catch (IOException e) {
                     running.set(false);
                     Log.e(TAG, e.toString());
@@ -180,6 +209,7 @@ public class SyncServer {
 
     public SyncServer(PlayerActivity activity) {
         playerActivity = activity;
+
         try {
             serv = new ServerSocket(1603);
         } catch (IOException e) {
@@ -194,6 +224,14 @@ public class SyncServer {
         listener = new Listener();
         listeningThread = new Thread(listener);
         listeningThread.start();
+    }
+
+    public void kick(String clientNick) {
+        for(SyncSocket s: connectedSockets) {
+            if(s.clientNick == clientNick) {
+                s.kick();
+            }
+        }
     }
 
     public void setPlayState(boolean b) {

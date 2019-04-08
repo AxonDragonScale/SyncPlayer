@@ -15,40 +15,55 @@ import java.util.ArrayList;
 
 public class ClientListAdapter extends RecyclerView.Adapter<ClientListAdapter.ClientViewHolder> {
 
-    ArrayList<String> clientNamesOnline;
+    ArrayList<String> clientNicks;
 
-    public ClientListAdapter() {
-        clientNamesOnline = new ArrayList<String>();
-        clientNamesOnline.add("Client1");
-        clientNamesOnline.add("Client2");
-        clientNamesOnline.add("Client3");
-        clientNamesOnline.add("Client4");
-        clientNamesOnline.add("Client5");
+    PlayerActivity playerActivity;
+
+    public ClientListAdapter(PlayerActivity playerActivity) {
+        this.playerActivity = playerActivity;
+
+        clientNicks = new ArrayList<String>();
     }
 
     @NonNull
     @Override
     public ClientViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-
         View view = inflater.inflate(R.layout.client_list_item, viewGroup, false);
 
-        ClientViewHolder viewHolder = new ClientViewHolder(view);
         Log.d("CLIENT_VIEW_CREATE", "CREATE: " + Integer.toString(i));
-        return viewHolder;
+        return new ClientViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ClientViewHolder hostViewHolder, int i) {
         TextView textView = hostViewHolder.textView;
-        textView.setText(clientNamesOnline.get(i));
+        textView.setText(clientNicks.get(i));
         textView.setOnClickListener(hostViewHolder);
         Log.d("CLIENT_VIEW_CREATE", "BIND: " + Integer.toString(i));
     }
 
     @Override
     public int getItemCount() {
-        return clientNamesOnline.size();
+        return clientNicks.size();
+    }
+
+    public void addClient(String clientNick) {
+        clientNicks.add(clientNick);
+        updateUI();
+    }
+
+    public void removeClient(String clientNick) {
+        for(int i = 0; i<clientNicks.size(); i++) {
+            if(clientNicks.get(i).equals(clientNick)) {
+                clientNicks.remove(i);
+                break;
+            }
+        }
+    }
+
+    public void updateUI() {
+        playerActivity.runOnUiThread(() -> notifyDataSetChanged());
     }
 
     public class ClientViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -58,25 +73,17 @@ public class ClientListAdapter extends RecyclerView.Adapter<ClientListAdapter.Cl
 
         @Override
         public void onClick(View view) {
-            int pos = getAdapterPosition();
             Log.i("CLIENT_VIEW_CREATE", "BUTTON_PRESS");
-            Toast.makeText(view.getContext(), clientNamesOnline.get(pos), Toast.LENGTH_LONG).show();
+            Toast.makeText(view.getContext(), clientNicks.get(getAdapterPosition()), Toast.LENGTH_LONG).show();
         }
 
         public ClientViewHolder(@NonNull View itemView) {
             super(itemView);
-            row = (ConstraintLayout) itemView.findViewById(R.id.host_list_row);
-            textView = (TextView) itemView.findViewById(R.id.tv_item);
-            button = (Button) itemView.findViewById(R.id.button);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (button.getText().equals("Connect")) {
-                        button.setText("Kick");
-                    } else {
-                        button.setText("Connect");
-                    }
-                }
+            row = itemView.findViewById(R.id.host_list_row);
+            textView = itemView.findViewById(R.id.tv_item);
+            button = itemView.findViewById(R.id.button);
+            button.setOnClickListener(view -> {
+                playerActivity.syncServer.kick(clientNicks.get(getAdapterPosition()));
             });
         }
     }
