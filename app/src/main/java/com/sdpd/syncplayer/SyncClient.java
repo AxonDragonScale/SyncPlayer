@@ -103,6 +103,7 @@ public class SyncClient implements Runnable {
                     sem.release();
                 } else if(command == SyncCommand.KICK.ordinal()) {
                     running.set(false);
+                    playerActivity.player.release();
                     Intent intent = new Intent(playerActivity, MainActivity.class);
                     intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     playerActivity.startActivity(intent);

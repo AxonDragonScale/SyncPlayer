@@ -30,8 +30,8 @@ public class PlayerActivity extends AppCompatActivity {
 
     String TAG = "PlayerActivity";
 
-    private SimpleExoPlayer player;
-    private PlayerView pvExoplayer;
+    SimpleExoPlayer player;
+    PlayerView pvExoplayer;
 
     private RecyclerView rvClientList;
     ClientListAdapter adapter;
@@ -107,6 +107,7 @@ public class PlayerActivity extends AppCompatActivity {
         Log.d("PLAYER_ACTIVITY", "Destroy");
 
         if (GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            nsdHost.unRegisterService();
             fs.harakiri();
             fs = null;
         }
@@ -115,7 +116,6 @@ public class PlayerActivity extends AppCompatActivity {
         if (syncServer != null) syncServer.close();
 
         player.release();
-        nsdHost.unRegisterService();
     }
 
     @Override
