@@ -12,7 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
@@ -29,6 +31,7 @@ import com.google.android.exoplayer2.util.Util;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Time;
 
 public class PlayerActivity extends AppCompatActivity {
 
@@ -52,6 +55,9 @@ public class PlayerActivity extends AppCompatActivity {
 
     private long playbackPosition;
 
+    SeekBar seekBar;
+    TextView tvCurTime;
+    TextView tvTotalTime;
     private Thread seekBarSyncThread;
 
     @Override
@@ -64,7 +70,7 @@ public class PlayerActivity extends AppCompatActivity {
         path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
         file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
 
-        Button b = findViewById(R.id.btn_playPause);
+        ImageButton b = findViewById(R.id.btn_playPause);
         b.setOnClickListener(view -> {
             syncServer.togglePlayState();
         });
@@ -178,10 +184,7 @@ public class PlayerActivity extends AppCompatActivity {
         player = ExoPlayerFactory.newSimpleInstance(this);
         pvExoplayer = findViewById(R.id.pv_exoplayer);
         pvExoplayer.setPlayer(player);
-
-        if(GlobalData.deviceRole == GlobalData.DeviceRole.CLIENT) {
-            pvExoplayer.setUseController(false);
-        }
+        pvExoplayer.setUseController(false);
 
         // Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
@@ -194,26 +197,33 @@ public class PlayerActivity extends AppCompatActivity {
         // Prepare the player with the source.
         player.prepare(mediaSource);
 
-        SeekBar sb = findViewById(R.id.sb_seekbar);
-        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                playbackPosition = i * player.getDuration() / 100;
-                if (b) {
-                    syncServer.sync();
+        tvCurTime = findViewById(R.id.tv_curTime);
+        tvTotalTime = findViewById(R.id.tv_totalTime);
+        seekBar = findViewById(R.id.sb_seekbar);
+
+        if(GlobalData.deviceRole == GlobalData.DeviceRole.HOST) {
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                    long duration = player.getDuration();
+                    playbackPosition = i * duration / 100;
+
+                    if (b) {
+                        syncServer.sync();
+                    }
                 }
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
 
-            }
+                }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
 
-            }
-        });
+                }
+            });
+        }
 
         seekBarSyncThread = new Thread(()->{
             try {
@@ -223,7 +233,16 @@ public class PlayerActivity extends AppCompatActivity {
                 Log.e("PLAYER", e.toString());
             }
             while (syncClient.isRunning()) {
-                sb.setProgress((int) player.getCurrentPosition() * 100 / (int) player.getDuration());
+                seekBar.setProgress((int) player.getCurrentPosition() * 100 / (int) player.getDuration());
+                runOnUiThread(() -> {
+                    long duration = player.getDuration();
+                    long pbp = getExactPlaybackPosition();
+                    String totalTime = String.format("%02d:%02d:%02d", (duration/3600000) % 24, (duration/60000) % 60, (duration/1000) % 60);
+                    String curTime = String.format("%02d:%02d:%02d", (pbp/3600000) % 24, (pbp/60000) % 60, (pbp/1000) % 60);
+                    tvTotalTime.setText(totalTime);
+                    tvCurTime.setText(curTime);
+                });
+
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

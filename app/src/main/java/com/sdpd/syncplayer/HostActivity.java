@@ -86,11 +86,17 @@ public class HostActivity extends AppCompatActivity {
                 String password = etNewPassword.getText().toString();
                 GlobalData.password = password;
 
-                Intent intent = new Intent(HostActivity.this, PlayerActivity.class);
-                intent.putExtra(getString(R.string.mediaSelectPathExtra), lastSelectedMediaPath);
-                intent.putExtra(getString(R.string.mediaSelectFileExtra), lastSelectedMediaFile);
+                if(lastSelectedMediaFile != null && lastSelectedMediaPath != null) {
+                    Intent intent = new Intent(HostActivity.this, PlayerActivity.class);
+                    intent.putExtra(getString(R.string.mediaSelectPathExtra), lastSelectedMediaPath);
+                    intent.putExtra(getString(R.string.mediaSelectFileExtra), lastSelectedMediaFile);
 
-                startActivity(intent);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(HostActivity.this, "Choose a File", Toast.LENGTH_SHORT).show();
+                }
+
+
             }
         });
     }
