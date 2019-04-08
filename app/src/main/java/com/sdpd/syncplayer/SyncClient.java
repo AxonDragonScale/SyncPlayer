@@ -90,7 +90,7 @@ public class SyncClient implements Runnable {
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
-                        playerActivity.seekTo(val);
+                        playerActivity.seekTo(playerActivity.getPlaybackPosition());
                         sem.release();
                     });
                     try {
@@ -112,5 +112,9 @@ public class SyncClient implements Runnable {
                 running.set(false);
             }
         }
+    }
+
+    public boolean isRunning() {
+        return running.get();
     }
 }

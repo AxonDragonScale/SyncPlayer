@@ -44,41 +44,42 @@ public class SyncServer {
                 clientNick = dis.readUTF();
                 playerActivity.adapter.addClient(clientNick);
 
-                dos.writeInt(SyncCommand.ECHO_RTT.ordinal());
-                dos.writeLong(currentTimeMillis());
-                if (dis.readInt() == SyncCommand.ECHO_RTT.ordinal()) {
-                    echoDelay = (currentTimeMillis() - dis.readLong())/2;
-                } else {
-                    Log.e("SYNC_SOCK", "protocol_not_followed");
-                    dis.readLong();
-                }
+                calcDelay();
+                calcSeekDelay();
             } catch (IOException e) {
                 Log.e("SYNC_SOCK", e.toString());
                 close();
             }
         }
 
-        public void calcDelay(PlayerActivity p) {
-            if (socket != null && dos != null) {
-                lock.lock();
-                try {
-                    dos.writeInt(SyncCommand.ECHO_SEEK.ordinal());
-                    dos.writeLong(p.getPlaybackPosition());
-                    if (dis.readInt() == SyncCommand.ECHO_SEEK.ordinal()) {
-                        totalDelay = (p.getPlaybackPosition() - dis.readLong() - echoDelay);
-                    } else {
-                        Log.e("SYNC_SOCK", "protocol_not_followed");
-                        dis.readLong();
-                    }
-                } catch (IOException e) {
-                    Log.e("SYNC_SOCK", e.toString());
-                    socket = null;
+        public void calcDelay() {
+            try {
+                dos.writeInt(SyncCommand.ECHO_RTT.ordinal());
+                dos.writeLong(currentTimeMillis());
+                if (dis.readInt() == SyncCommand.ECHO_RTT.ordinal()) {
+                    echoDelay = (currentTimeMillis() - dis.readLong()) / 2;
+                } else {
+                    Log.e("SYNC_SOCK", "protocol_not_followed");
+                    dis.readLong();
                 }
-                lock.unlock();
-            } else {
-                close();
+            } catch (IOException e) {
+                Log.e("SYNC_SERV", e.toString());
             }
-            Log.i("SYNC_SOCK_DELAYS", "" + echoDelay + " " + totalDelay);
+        }
+
+        public void calcSeekDelay() {
+            try {
+                dos.writeInt(SyncCommand.ECHO_SEEK.ordinal());
+                dos.writeLong(currentTimeMillis());
+                if (dis.readInt() == SyncCommand.ECHO_SEEK.ordinal()) {
+                    totalDelay = (currentTimeMillis() - dis.readLong()) - echoDelay;
+                } else {
+                    Log.e("SYNC_SOCK", "protocol_not_followed");
+                    dis.readLong();
+                }
+            } catch (IOException e) {
+                Log.e("SYNC_SERV", e.toString());
+            }
         }
 
         public void syncToTime(long l) {
@@ -86,7 +87,7 @@ public class SyncServer {
                 lock.lock();
                 try {
                     dos.writeInt(SyncCommand.SYNC.ordinal());
-                    dos.writeLong(l + totalDelay);
+                    dos.writeLong(l + echoDelay);
                 } catch (IOException e) {
                     Log.e("SYNC_SOCK", e.toString());
                     socket = null;
@@ -161,42 +162,11 @@ public class SyncServer {
         }
     }
 
-    class Listener implements Runnable {
-
-        private AtomicBoolean running;
-
-        public Listener() {
-            running = new AtomicBoolean(true);
-        }
-
-        @Override
-        public void run() {
-            while(running.get()) {
-                try {
-                    Socket s = serv.accept();
-                    SyncSocket syncSocket = new SyncSocket(s);
-
-                    syncSocket.calcDelay(playerActivity);
-                    if (playState) {
-                        syncSocket.play(playerActivity.getPlaybackPosition());
-                    } else {
-                        syncSocket.play(playerActivity.getPlaybackPosition());
-                    }
-                    connectedSockets.add(syncSocket);
-                } catch (IOException e) {
-                    running.set(false);
-                    Log.e(TAG, e.toString());
-                }
-            }
-        }
-    }
-
-    Runnable listener;
-
     private String TAG = "SYNC_SERV";
 
     private ArrayList<SyncSocket> connectedSockets;
     private Thread listeningThread;
+    private Thread runningThread;
 
     private PlayerActivity playerActivity;
     private ServerSocket serv;
@@ -221,9 +191,35 @@ public class SyncServer {
         exec = Executors.newSingleThreadExecutor();
 
         running = new AtomicBoolean(true);
-        listener = new Listener();
-        listeningThread = new Thread(listener);
+        listeningThread = new Thread(() -> {
+            while(running.get()) {
+                try {
+                    Socket s = serv.accept();
+                    SyncSocket syncSocket = new SyncSocket(s);
+                    if (playState) {
+                        syncSocket.play(playerActivity.getExactPlaybackPosition());
+                    } else {
+                        syncSocket.pause(playerActivity.getExactPlaybackPosition());
+                    }
+                    connectedSockets.add(syncSocket);
+                } catch (IOException e) {
+                    running.set(false);
+                    Log.e(TAG, e.toString());
+                }
+            }
+        });
         listeningThread.start();
+
+        runningThread = new Thread(() -> {
+            for (SyncSocket s : connectedSockets) {
+                s.calcDelay();
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                Log.e("SYNC_SERV", e.toString());
+            }
+        });
     }
 
     public void kick(String clientNick) {
@@ -234,9 +230,13 @@ public class SyncServer {
         }
     }
 
-    public void setPlayState(boolean b) {
-        playState = b;
-        if (b) {
+    public void togglePlayState() {
+        playState = !playState;
+        sync();
+    }
+
+    public void sync() {
+        if (playState) {
             long pos = playerActivity.getPlaybackPosition();
             exec.execute(() -> {
                 for (SyncSocket s : connectedSockets) {

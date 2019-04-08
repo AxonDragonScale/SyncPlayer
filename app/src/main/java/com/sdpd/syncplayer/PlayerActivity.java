@@ -11,8 +11,11 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -25,6 +28,7 @@ import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class PlayerActivity extends AppCompatActivity {
 
@@ -46,6 +50,10 @@ public class PlayerActivity extends AppCompatActivity {
     SyncServer syncServer;
     private SyncClient syncClient;
 
+    private long playbackPosition;
+
+    private Thread seekBarSyncThread;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +63,11 @@ public class PlayerActivity extends AppCompatActivity {
 
         path = getIntent().getStringExtra(getString(R.string.mediaSelectPathExtra));
         file = (File)getIntent().getSerializableExtra(getString(R.string.mediaSelectFileExtra));
+
+        Button b = findViewById(R.id.btn_playPause);
+        b.setOnClickListener(view -> {
+            syncServer.togglePlayState();
+        });
 
         initPlayer();
         initRvClientList();
@@ -66,13 +79,19 @@ public class PlayerActivity extends AppCompatActivity {
             fs = new FileSender(path, 3078);
 
             syncServer = new SyncServer(this);
-            player.addListener(new Player.EventListener() {
-                @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                    Toast.makeText(PlayerActivity.this, "PLAY: " + playWhenReady, Toast.LENGTH_SHORT).show();
-                    syncServer.setPlayState(playWhenReady);
-                }
-            });
+//            player.addListener(new Player.EventListener() {
+//                @Override
+//                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+//                    Toast.makeText(PlayerActivity.this, "PLAY: " + playWhenReady, Toast.LENGTH_SHORT).show();
+//                    syncServer.setPlayState(playWhenReady);
+//                }
+//            });
+            try {
+                InetAddress addr = InetAddress.getByName("127.0.0.1");
+                syncClient = new SyncClient(this, addr);
+            } catch (UnknownHostException e) {
+                Log.e(TAG, e.toString());
+            }
         } else if (GlobalData.deviceRole == GlobalData.DeviceRole.CLIENT) {
             InetAddress address = (InetAddress) getIntent().getSerializableExtra("HOST");
             syncClient = new SyncClient(this, address);
@@ -174,6 +193,46 @@ public class PlayerActivity extends AppCompatActivity {
 
         // Prepare the player with the source.
         player.prepare(mediaSource);
+
+        SeekBar sb = findViewById(R.id.sb_seekbar);
+        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                playbackPosition = i * player.getDuration() / 100;
+                if (b) {
+                    syncServer.sync();
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        seekBarSyncThread = new Thread(()->{
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                Log.e("PLAYER", e.toString());
+            }
+            while (syncClient.isRunning()) {
+                sb.setProgress((int) player.getCurrentPosition() * 100 / (int) player.getDuration());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    Log.e("PLAYER", e.toString());
+                }
+            }
+        });
+        seekBarSyncThread.start();
     }
 
     public void initRvClientList() {
@@ -190,6 +249,10 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     public long getPlaybackPosition() {
+        return playbackPosition;
+    }
+
+    public long getExactPlaybackPosition() {
         return player.getCurrentPosition();
     }
 
